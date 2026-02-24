@@ -35,30 +35,77 @@
         </div>
     </div>
 
-    <script>
-        // データの管理
-        const mountains = [
-            { name: "富士山", alt: 3776, members: ["稜平", "山崎"] },
-            { name: "大菩薩嶺", alt: 2057, members: ["稜平", "こうちゃん"] },
-            { name: "槍ヶ岳", alt: 3180, members: [] },
-            { name: "筑波山", alt: 877, members: ["としえ"] }
-            // ここにどんどん追加してください！
-        ];
+<script>
+    // 日本百名山 全データリスト（標高順・地域順などは必要に応じて調整してください）
+    const mountains = [
+        { name: "利尻岳", alt: 1721, members: [] }, { name: "羅臼岳", alt: 1660, members: [] },
+        { name: "斜里岳", alt: 1547, members: [] }, { name: "阿寒岳", alt: 1499, members: [] },
+        { name: "大雪山", alt: 2291, members: [] }, { name: "トムラウシ山", alt: 2141, members: [] },
+        { name: "十勝岳", alt: 2077, members: [] }, { name: "幌尻岳", alt: 2052, members: [] },
+        { name: "後方羊蹄山", alt: 1898, members: [] }, { name: "平ヶ岳", alt: 2141, members: [] },
+        { name: "岩木山", alt: 1625, members: [] }, { name: "八甲田山", alt: 1584, members: [] },
+        { name: "八幡平", alt: 1613, members: [] }, { name: "岩手山", alt: 2038, members: [] },
+        { name: "早池峰山", alt: 1917, members: [] }, { name: "鳥海山", alt: 2236, members: [] },
+        { name: "月山", alt: 1984, members: [] }, { name: "朝日岳", alt: 1871, members: [] },
+        { name: "蔵王山", alt: 1841, members: [] }, { name: "飯豊山", alt: 2105, members: [] },
+        { name: "吾妻山", alt: 2035, members: [] }, { name: "安達太良山", alt: 1700, members: [] },
+        { name: "磐梯山", alt: 1819, members: [] }, { name: "会津駒ヶ岳", alt: 2133, members: [] },
+        { name: "那須岳", alt: 1915, members: [] }, { name: "越後駒ヶ岳", alt: 2003, members: [] },
+        { name: "平ヶ岳", alt: 2141, members: [] }, { name: "巻機山", alt: 1967, members: [] },
+        { name: "燧ヶ岳", alt: 2356, members: [] }, { name: "至仏山", alt: 2228, members: [] },
+        { name: "谷川岳", alt: 1977, members: [] }, { name: "雨飾山", alt: 1963, members: [] },
+        { name: "苗場山", alt: 2145, members: [] }, { name: "妙高山", alt: 2454, members: [] },
+        { name: "火打山", alt: 2462, members: [] }, { name: "高妻山", alt: 2353, members: [] },
+        { name: "男体山", alt: 2486, members: [] }, { name: "奥白根山", alt: 2578, members: [] },
+        { name: "皇海山", alt: 2144, members: [] }, { name: "武尊山", alt: 2158, members: [] },
+        { name: "赤城山", alt: 1828, members: [] }, { name: "草津白根山", alt: 2160, members: [] },
+        { name: "四阿山", alt: 2354, members: [] }, { name: "浅間山", alt: 2568, members: [] },
+        { name: "筑波山", alt: 877, members: ["としえ"] }, { name: "白根山", alt: 2578, members: [] },
+        { name: "両神山", alt: 1723, members: [] }, { name: "雲取山", alt: 2017, members: [] },
+        { name: "甲武信ヶ岳", alt: 2475, members: [] }, { name: "金峰山", alt: 2599, members: [] },
+        { name: "瑞牆山", alt: 2230, members: [] }, { name: "大菩薩嶺", alt: 2057, members: ["稜平", "こうちゃん"] },
+        { name: "丹沢山", alt: 1567, members: [] }, { name: "富士山", alt: 3776, members: ["稜平", "山崎"] },
+        { name: "天城山", alt: 1406, members: [] }, { name: "木曽駒ヶ岳", alt: 2956, members: [] },
+        { name: "空木岳", alt: 2864, members: [] }, { name: "恵那山", alt: 2191, members: [] },
+        { name: "御嶽山", alt: 3067, members: [] }, { name: "乗鞍岳", alt: 3026, members: [] },
+        { name: "焼岳", alt: 2455, members: [] }, { name: "穂高岳", alt: 3190, members: [] },
+        { name: "槍ヶ岳", alt: 3180, members: [] }, { name: "水晶岳", alt: 2986, members: [] },
+        { name: "鷲羽岳", alt: 2924, members: [] }, { name: "黒部五郎岳", alt: 2840, members: [] },
+        { name: "薬師岳", alt: 2926, members: [] }, { name: "有明山", alt: 2268, members: [] },
+        { name: "立山", alt: 3015, members: [] }, { name: "剱岳", alt: 2999, members: [] },
+        { name: "鹿島槍ヶ岳", alt: 2889, members: [] }, { name: "五竜岳", alt: 2814, members: [] },
+        { name: "唐松岳", alt: 2696, members: [] }, { name: "白馬岳", alt: 2932, members: [] },
+        { name: "妙高山", alt: 2454, members: [] }, { name: "蓼科山", alt: 2530, members: [] },
+        { name: "八ヶ岳", alt: 2899, members: [] }, { name: "美ヶ原", alt: 2034, members: [] },
+        { name: "霧ヶ峰", alt: 1925, members: [] }, { name: "北岳", alt: 3193, members: [] },
+        { name: "間ノ岳", alt: 3190, members: [] }, { name: "仙丈ヶ岳", alt: 3033, members: [] },
+        { name: "甲斐駒ヶ岳", alt: 2967, members: [] }, { name: "鳳凰山", alt: 2840, members: [] },
+        { name: "塩見岳", alt: 3047, members: [] }, { name: "荒川岳", alt: 3141, members: [] },
+        { name: "赤石岳", alt: 3120, members: [] }, { name: "聖岳", alt: 3013, members: [] },
+        { name: "光岳", alt: 2591, members: [] }, { name: "白山", alt: 2702, members: [] },
+        { name: "荒島岳", alt: 1523, members: [] }, { name: "伊吹山", alt: 1377, members: [] },
+        { name: "大台ヶ原山", alt: 1695, members: [] }, { name: "大峰山", alt: 1915, members: [] },
+        { name: "大山", alt: 1729, members: [] }, { name: "剣山", alt: 1955, members: [] },
+        { name: "石鎚山", alt: 1982, members: [] }, { name: "九重山", alt: 1791, members: [] },
+        { name: "祖母山", alt: 1756, members: [] }, { name: "阿蘇山", alt: 1592, members: [] },
+        { name: "霧島山", alt: 1700, members: [] }, { name: "開聞岳", alt: 924, members: [] },
+        { name: "宮之浦岳", alt: 1936, members: [] }
+    ];
 
-        const list = document.getElementById('mt-list');
-        mountains.forEach(m => {
-            const div = document.createElement('div');
-            div.className = `mt-card ${m.members.length > 0 ? 'climbed' : ''}`;
-            div.innerHTML = `<strong>${m.name}</strong><br><small>${m.alt}m</small>`;
-            div.onclick = () => {
-                document.getElementById('m-name').innerText = m.name;
-                document.getElementById('m-alt').innerText = `標高: ${m.alt}m`;
-                document.getElementById('m-members').innerText = m.members.length > 0 ? m.members.join(', ') : "未踏破";
-                document.getElementById('modal').style.display = 'flex';
-            };
-            list.appendChild(div);
-        });
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
-    </script>
+    const list = document.getElementById('mt-list');
+    mountains.forEach(m => {
+        const div = document.createElement('div');
+        div.className = `mt-card ${m.members.length > 0 ? 'climbed' : ''}`;
+        div.innerHTML = `<strong>${m.name}</strong><br><small>${m.alt}m</small>`;
+        div.onclick = () => {
+            document.getElementById('m-name').innerText = m.name;
+            document.getElementById('m-alt').innerText = `標高: ${m.alt}m`;
+            document.getElementById('m-members').innerText = m.members.length > 0 ? m.members.join(', ') : "未踏破";
+            document.getElementById('modal').style.display = 'flex';
+        };
+        list.appendChild(div);
+    });
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+</script>
 </body>
 </html>
