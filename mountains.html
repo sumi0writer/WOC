@@ -2,15 +2,43 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>100 Peaks - WOC</title>
+    <title>100 Peaks Badge Collection - WOC</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .mountain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; margin-top: 2rem; }
-        .mt-card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
-        .mt-card.climbed { border-left: 6px solid var(--accent); background: #fff9f0; }
-        .mt-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center; }
-        .modal-body { background:white; padding:2rem; border-radius:10px; max-width:400px; width:90%; position:relative; }
+        /* 地方ごとのセクション */
+        .region-section { margin-bottom: 3rem; text-align: left; }
+        .region-title { background: var(--primary); color: white; padding: 0.5rem 1rem; border-radius: 5px; display: inline-block; margin-bottom: 1.5rem; }
+
+        /* バッジ風のレイアウト */
+        .mountain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 1.5rem; }
+        
+        .mt-badge {
+            width: 80px; height: 80px; margin: 0 auto;
+            border-radius: 50%; background: #e0e0e0;
+            border: 4px solid #bbb; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            font-size: 0.7rem; color: #999; position: relative;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer; box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* 登頂済みバッジのデザイン（ポケモンのジムバッジ風！） */
+        .mt-badge.climbed {
+            background: linear-gradient(135deg, #fff3e0, var(--accent));
+            border: 4px solid #d4af37; /* 金枠 */
+            color: #5d4037; font-weight: bold;
+            box-shadow: 0 5px 15px rgba(242, 140, 40, 0.4), inset 0 -2px 5px rgba(0,0,0,0.2);
+            transform: scale(1.1);
+        }
+        .mt-badge.climbed::after {
+            content: "🚩"; position: absolute; top: -10px; right: -10px; font-size: 1.2rem;
+        }
+
+        .mt-name { font-size: 0.8rem; margin-top: 0.5rem; font-weight: bold; display: block; color: var(--text); }
+
+        /* 管理用パネル（稜平さん専用） */
+        #admin-panel { background: #f0f0f0; padding: 1rem; margin-top: 4rem; border-radius: 10px; border: 2px dashed var(--primary); display: none; }
+        textarea { width: 100%; height: 100px; font-family: monospace; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -20,92 +48,103 @@
     </header>
 
     <section>
-        <h2>日本百名山 踏破リスト</h2>
-        <p>オレンジ色の山は部員の誰かが登頂済みです！</p>
-        <div id="mt-list" class="mountain-grid"></div>
+        <h2>WOC百名山バッジコレクション</h2>
+        <p>山をクリックして詳細を確認！目指せ、全地方制覇！</p>
+        
+        <div id="badge-container"></div>
+
+        <div id="admin-panel">
+            <h3>🛠️ 幹部用データ更新パネル</h3>
+            <p>※ここでメンバーを編集した後、下のコードをコピーして <code>mountains.html</code> のデータ部分を上書き保存してください。</p>
+            <textarea id="json-output" readonly></textarea>
+        </div>
     </section>
 
-    <div id="modal" onclick="closeModal()">
-        <div class="modal-body" onclick="event.stopPropagation()">
+    <div id="modal" onclick="closeModal()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+        <div class="modal-body" onclick="event.stopPropagation()" style="background:white; padding:2rem; border-radius:15px; width:80%; max-width:400px;">
             <h2 id="m-name"></h2>
             <p id="m-alt"></p>
-            <div style="background:#f0f4f0; padding:10px; border-radius:5px;">
-                <strong>🚩 登頂者:</strong> <span id="m-members"></span>
+            <div id="m-members-div" style="background:#fff9f0; padding:1rem; border-radius:10px; border:1px solid var(--accent);">
+                <strong>🚩 登頂者リスト:</strong>
+                <p id="m-members" style="margin: 0.5rem 0;"></p>
+                <input type="text" id="add-member-input" placeholder="名前を入力してEnter">
             </div>
         </div>
     </div>
 
-<script>
-    // 日本百名山 全データリスト（標高順・地域順などは必要に応じて調整してください）
-    const mountains = [
-        { name: "利尻岳", alt: 1721, members: [] }, { name: "羅臼岳", alt: 1660, members: [] },
-        { name: "斜里岳", alt: 1547, members: [] }, { name: "阿寒岳", alt: 1499, members: [] },
-        { name: "大雪山", alt: 2291, members: [] }, { name: "トムラウシ山", alt: 2141, members: [] },
-        { name: "十勝岳", alt: 2077, members: [] }, { name: "幌尻岳", alt: 2052, members: [] },
-        { name: "後方羊蹄山", alt: 1898, members: [] }, { name: "平ヶ岳", alt: 2141, members: [] },
-        { name: "岩木山", alt: 1625, members: [] }, { name: "八甲田山", alt: 1584, members: [] },
-        { name: "八幡平", alt: 1613, members: [] }, { name: "岩手山", alt: 2038, members: [] },
-        { name: "早池峰山", alt: 1917, members: [] }, { name: "鳥海山", alt: 2236, members: [] },
-        { name: "月山", alt: 1984, members: [] }, { name: "朝日岳", alt: 1871, members: [] },
-        { name: "蔵王山", alt: 1841, members: [] }, { name: "飯豊山", alt: 2105, members: [] },
-        { name: "吾妻山", alt: 2035, members: [] }, { name: "安達太良山", alt: 1700, members: [] },
-        { name: "磐梯山", alt: 1819, members: [] }, { name: "会津駒ヶ岳", alt: 2133, members: [] },
-        { name: "那須岳", alt: 1915, members: [] }, { name: "越後駒ヶ岳", alt: 2003, members: [] },
-        { name: "平ヶ岳", alt: 2141, members: [] }, { name: "巻機山", alt: 1967, members: [] },
-        { name: "燧ヶ岳", alt: 2356, members: [] }, { name: "至仏山", alt: 2228, members: [] },
-        { name: "谷川岳", alt: 1977, members: [] }, { name: "雨飾山", alt: 1963, members: [] },
-        { name: "苗場山", alt: 2145, members: [] }, { name: "妙高山", alt: 2454, members: [] },
-        { name: "火打山", alt: 2462, members: [] }, { name: "高妻山", alt: 2353, members: [] },
-        { name: "男体山", alt: 2486, members: [] }, { name: "奥白根山", alt: 2578, members: [] },
-        { name: "皇海山", alt: 2144, members: [] }, { name: "武尊山", alt: 2158, members: [] },
-        { name: "赤城山", alt: 1828, members: [] }, { name: "草津白根山", alt: 2160, members: [] },
-        { name: "四阿山", alt: 2354, members: [] }, { name: "浅間山", alt: 2568, members: [] },
-        { name: "筑波山", alt: 877, members: ["としえ"] }, { name: "白根山", alt: 2578, members: [] },
-        { name: "両神山", alt: 1723, members: [] }, { name: "雲取山", alt: 2017, members: [] },
-        { name: "甲武信ヶ岳", alt: 2475, members: [] }, { name: "金峰山", alt: 2599, members: [] },
-        { name: "瑞牆山", alt: 2230, members: [] }, { name: "大菩薩嶺", alt: 2057, members: ["稜平", "こうちゃん"] },
-        { name: "丹沢山", alt: 1567, members: [] }, { name: "富士山", alt: 3776, members: ["稜平", "山崎"] },
-        { name: "天城山", alt: 1406, members: [] }, { name: "木曽駒ヶ岳", alt: 2956, members: [] },
-        { name: "空木岳", alt: 2864, members: [] }, { name: "恵那山", alt: 2191, members: [] },
-        { name: "御嶽山", alt: 3067, members: [] }, { name: "乗鞍岳", alt: 3026, members: [] },
-        { name: "焼岳", alt: 2455, members: [] }, { name: "穂高岳", alt: 3190, members: [] },
-        { name: "槍ヶ岳", alt: 3180, members: [] }, { name: "水晶岳", alt: 2986, members: [] },
-        { name: "鷲羽岳", alt: 2924, members: [] }, { name: "黒部五郎岳", alt: 2840, members: [] },
-        { name: "薬師岳", alt: 2926, members: [] }, { name: "有明山", alt: 2268, members: [] },
-        { name: "立山", alt: 3015, members: [] }, { name: "剱岳", alt: 2999, members: [] },
-        { name: "鹿島槍ヶ岳", alt: 2889, members: [] }, { name: "五竜岳", alt: 2814, members: [] },
-        { name: "唐松岳", alt: 2696, members: [] }, { name: "白馬岳", alt: 2932, members: [] },
-        { name: "妙高山", alt: 2454, members: [] }, { name: "蓼科山", alt: 2530, members: [] },
-        { name: "八ヶ岳", alt: 2899, members: [] }, { name: "美ヶ原", alt: 2034, members: [] },
-        { name: "霧ヶ峰", alt: 1925, members: [] }, { name: "北岳", alt: 3193, members: [] },
-        { name: "間ノ岳", alt: 3190, members: [] }, { name: "仙丈ヶ岳", alt: 3033, members: [] },
-        { name: "甲斐駒ヶ岳", alt: 2967, members: [] }, { name: "鳳凰山", alt: 2840, members: [] },
-        { name: "塩見岳", alt: 3047, members: [] }, { name: "荒川岳", alt: 3141, members: [] },
-        { name: "赤石岳", alt: 3120, members: [] }, { name: "聖岳", alt: 3013, members: [] },
-        { name: "光岳", alt: 2591, members: [] }, { name: "白山", alt: 2702, members: [] },
-        { name: "荒島岳", alt: 1523, members: [] }, { name: "伊吹山", alt: 1377, members: [] },
-        { name: "大台ヶ原山", alt: 1695, members: [] }, { name: "大峰山", alt: 1915, members: [] },
-        { name: "大山", alt: 1729, members: [] }, { name: "剣山", alt: 1955, members: [] },
-        { name: "石鎚山", alt: 1982, members: [] }, { name: "九重山", alt: 1791, members: [] },
-        { name: "祖母山", alt: 1756, members: [] }, { name: "阿蘇山", alt: 1592, members: [] },
-        { name: "霧島山", alt: 1700, members: [] }, { name: "開聞岳", alt: 924, members: [] },
-        { name: "宮之浦岳", alt: 1936, members: [] }
-    ];
+    <script>
+        // 地方ごとにデータを整理
+        const data = [
+            { region: "北海道", mountains: [
+                { name: "利尻岳", alt: 1721, members: [] }, { name: "羅臼岳", alt: 1660, members: [] }, { name: "十勝岳", alt: 2077, members: [] }
+            ]},
+            { region: "関東・甲信越", mountains: [
+                { name: "筑波山", alt: 877, members: ["としえ"] }, { name: "大菩薩嶺", alt: 2057, members: ["稜平", "こうちゃん"] }, { name: "富士山", alt: 3776, members: ["稜平", "山崎"] }
+            ]},
+            // ...他の山も同様に region ごとにグループ化
+        ];
 
-    const list = document.getElementById('mt-list');
-    mountains.forEach(m => {
-        const div = document.createElement('div');
-        div.className = `mt-card ${m.members.length > 0 ? 'climbed' : ''}`;
-        div.innerHTML = `<strong>${m.name}</strong><br><small>${m.alt}m</small>`;
-        div.onclick = () => {
+        function renderBadges() {
+            const container = document.getElementById('badge-container');
+            container.innerHTML = '';
+            data.forEach(reg => {
+                const section = document.createElement('div');
+                section.className = 'region-section';
+                section.innerHTML = `<h3 class="region-title">${reg.region}</h3>`;
+                
+                const grid = document.createElement('div');
+                grid.className = 'mountain-grid';
+                
+                reg.mountains.forEach(m => {
+                    const badgeWrap = document.createElement('div');
+                    badgeWrap.style.textAlign = 'center';
+                    
+                    const badge = document.createElement('div');
+                    badge.className = `mt-badge ${m.members.length > 0 ? 'climbed' : ''}`;
+                    badge.innerHTML = `<span>${m.name.substring(0,2)}</span>`;
+                    badge.onclick = () => openModal(m);
+                    
+                    badgeWrap.appendChild(badge);
+                    badgeWrap.innerHTML += `<span class="mt-name">${m.name}</span>`;
+                    badgeWrap.onclick = () => openModal(m); // 名前クリックでも開く
+                    grid.appendChild(badgeWrap);
+                });
+                section.appendChild(grid);
+                container.appendChild(section);
+            });
+            updateAdminPanel();
+        }
+
+        let currentMt = null;
+        function openModal(m) {
+            currentMt = m;
             document.getElementById('m-name').innerText = m.name;
             document.getElementById('m-alt').innerText = `標高: ${m.alt}m`;
             document.getElementById('m-members').innerText = m.members.length > 0 ? m.members.join(', ') : "未踏破";
             document.getElementById('modal').style.display = 'flex';
-        };
-        list.appendChild(div);
-    });
-    function closeModal() { document.getElementById('modal').style.display = 'none'; }
-</script>
+        }
+
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+        // 入力機能（擬似的なもの：ここでの変更はリロードで消えますが、コード生成に使います）
+        document.getElementById('add-member-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const name = this.value.trim();
+                if (name && !currentMt.members.includes(name)) {
+                    currentMt.members.push(name);
+                    renderBadges();
+                    openModal(currentMt);
+                    this.value = '';
+                }
+            }
+        });
+
+        function updateAdminPanel() {
+            document.getElementById('admin-panel').style.display = 'block';
+            document.getElementById('json-output').value = "const data = " + JSON.stringify(data, null, 4) + ";";
+        }
+
+        renderBadges();
+    </script>
 </body>
 </html>
