@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>100 Peaks - WOC</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .mountain-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; margin-top: 2rem; }
+        .mt-card { background: white; border: 1px solid #ddd; padding: 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .mt-card.climbed { border-left: 6px solid var(--accent); background: #fff9f0; }
+        .mt-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        #modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center; }
+        .modal-body { background:white; padding:2rem; border-radius:10px; max-width:400px; width:90%; position:relative; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">WOC</a>
+        <nav><a href="about.html">About</a><a href="mountains.html">100 Peaks</a><a href="join.html">Join Us</a></nav>
+    </header>
+
+    <section>
+        <h2>日本百名山 踏破リスト</h2>
+        <p>オレンジ色の山は部員の誰かが登頂済みです！</p>
+        <div id="mt-list" class="mountain-grid"></div>
+    </section>
+
+    <div id="modal" onclick="closeModal()">
+        <div class="modal-body" onclick="event.stopPropagation()">
+            <h2 id="m-name"></h2>
+            <p id="m-alt"></p>
+            <div style="background:#f0f4f0; padding:10px; border-radius:5px;">
+                <strong>🚩 登頂者:</strong> <span id="m-members"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // データの管理
+        const mountains = [
+            { name: "富士山", alt: 3776, members: ["稜平", "山崎"] },
+            { name: "大菩薩嶺", alt: 2057, members: ["稜平", "こうちゃん"] },
+            { name: "槍ヶ岳", alt: 3180, members: [] },
+            { name: "筑波山", alt: 877, members: ["としえ"] }
+            // ここにどんどん追加してください！
+        ];
+
+        const list = document.getElementById('mt-list');
+        mountains.forEach(m => {
+            const div = document.createElement('div');
+            div.className = `mt-card ${m.members.length > 0 ? 'climbed' : ''}`;
+            div.innerHTML = `<strong>${m.name}</strong><br><small>${m.alt}m</small>`;
+            div.onclick = () => {
+                document.getElementById('m-name').innerText = m.name;
+                document.getElementById('m-alt').innerText = `標高: ${m.alt}m`;
+                document.getElementById('m-members').innerText = m.members.length > 0 ? m.members.join(', ') : "未踏破";
+                document.getElementById('modal').style.display = 'flex';
+            };
+            list.appendChild(div);
+        });
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
+    </script>
+</body>
+</html>
